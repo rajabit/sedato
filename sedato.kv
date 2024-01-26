@@ -1,0 +1,160 @@
+#:kivy 1.0.9
+
+<Label>:
+     font_name: 'fonts/dank-mono-regular.otf'
+
+<Button>:
+     font_name: 'fonts/dank-mono-regular.otf'
+
+<Sedato>:
+     BoxLayout:
+          orientation: 'vertical'
+          AnchorLayout:
+               anchor_x: 'center'
+               anchor_y: 'center'
+               canvas.before:
+                    Color:
+                         rgba: 0.0588, 0.0941, 0.1647, 1
+                    Rectangle:
+                         pos: self.pos
+                         size: self.size
+               GridLayout:
+                    cols: 1
+                    size_hint: 1, None
+                    height: self.minimum_height
+                    Label:
+                         text: 'Sedato'
+                         size_hint: (1, None)
+                         font_size: 50
+                         halign: 'center'
+                         padding: (10, 7)
+                         bold: True
+                         markup: True
+                         size: self.texture_size
+                    Label:
+                         text: 'Text-to-Audio and Audio-to-Text using AI'
+                         size_hint: (1, None)
+                         font_name: 'fonts/dank-mono-italic.otf'
+                         halign: 'center'
+                         padding: (10, 7)
+                         color: (0.8863, 0.9098, 0.9412, 1.0)
+                         markup: True
+                         italic: True
+                         size: self.texture_size
+                    AnchorLayout:
+                         anchor_x: 'center'
+                         anchor_y: 'center'
+                         size_hint: (1, None)
+                         height: 60
+                         padding: (0, 0)
+                         BoxLayout:
+                              orientation: 'horizontal'
+                              size_hint: (None, None)
+                              padding: (10, 7)
+                              size: self.minimum_size
+                              Button:
+                                   text: "Text to Audio"
+                                   markup: True
+                                   halign: 'center'
+                                   padding: (10, 8)
+                                   background_color: (0.2196, 0.7412, 0.9725, 1.0)
+                                   size_hint: (None, None)
+                                   on_press: root.goTo('text2audio')
+                                   size: self.texture_size
+                              Label:
+                                   text: 'or'
+                                   markup: True
+                                   halign: 'center'
+                                   padding: (10, 7)
+                                   size_hint: (None, None)
+                                   size: self.texture_size
+                              Button:
+                                   text: "Audio to Text"
+                                   markup: True
+                                   halign: 'center'
+                                   padding: (10, 8)
+                                   background_color: (0.2196, 0.7412, 0.9725, 1.0)
+                                   size_hint: (None, None)
+                                   on_press: root.goTo('audio2text')
+                                   size: self.texture_size
+
+
+<Audio2Text>:
+     BoxLayout:
+          orientation: 'vertical'
+          canvas.before:
+               Color:
+                    rgba: 0.0588, 0.0941, 0.1647, 1
+               Rectangle:
+                    pos: self.pos
+                    size: self.size
+          BoxLayout:
+               orientation: 'horizontal'
+               size_hint: (1, None)
+               padding: (10, 8)
+               size: self.minimum_size
+               # Button:
+               #      text: 'Back'
+               #      markup: True
+               #      halign: 'center'
+               #      padding: (10, 8)
+               #      size_hint: (None, None)
+               #      on_press: root.back()
+               #      size: self.texture_size
+               Label: 
+                    text: "> Audio2Text"
+                    markup: True
+                    halign: 'left'
+                    valign: 'middle'
+                    bold: True
+                    padding: (10, 8)
+                    size_hint: (1, 1)
+                    font_size: 25
+                    text_size: self.size
+                    size: self.texture_size
+               Label: 
+                    text: "Model :"
+                    markup: True
+                    halign: 'left'
+                    valign: 'middle'
+                    font_name: 'fonts/dank-mono-italic.otf'
+                    padding: (10, 8)
+                    size_hint: (None, None)
+                    size: self.texture_size
+               Button:
+                    id: audio2text_model_button
+                    text: 'openai/whisper-large-v3'
+                    markup: True
+                    halign: 'center'
+                    padding: (10, 8)
+                    size_hint: (None, None)
+                    on_press: root.select_model()
+                    size: self.texture_size
+          AnchorLayout:
+               anchor_x: 'center'
+               anchor_y: 'center'
+               BoxLayout:
+                    orientation: 'vertical'
+                    size_hint: (None, None)
+                    padding: (10, 8)
+                    size: self.minimum_size
+                    Label:
+                         text: "Input Audio/Video File :"
+                         markup: True
+                         halign: 'left'
+                         valign: 'middle'
+                         font_name: 'fonts/dank-mono-italic.otf'
+                         padding: (10, 8)
+                         size_hint: (None, None)
+                         size: self.texture_size
+                    Button:
+                         id: audio2text_file_button
+                         text: 'Click to select a file'
+                         markup: True
+                         halign: 'center'
+                         padding: (10, 8)
+                         size_hint: (None, None)
+                         on_press: root.select_file()
+                         size: self.texture_size
+
+

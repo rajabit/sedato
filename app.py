@@ -11,6 +11,7 @@ import codecs
 import torch
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
 from transformers import pipeline
+import subprocess
 
 Builder.load_file('sedato.kv')
 
@@ -65,9 +66,8 @@ class Audio2Text(Screen):
         path = filechooser.open_file(title="Audio/Video", filters=[
                                      ("MediaFile", "*.mp3",
                                       "*.mp4", "*.wav", "*.flac")])
-        print(self.manager.screens[3].start(
-            model=self.ids.audio2text_model_button.text,
-            path=path[0]))
+        if (len(path) == 0):
+            return
 
         self.manager.screens[3].start(
             self.ids.audio2text_model_button.text,
@@ -106,72 +106,91 @@ class Audio2TextProgress(Screen):
         super(Audio2TextProgress, self).__init__(**kwargs)
 
     def convert(self, model, path):
-        if (path.lower().endswith(('.mp4'))):
-            import moviepy.editor as mp
-            audio = os.path.join(os.getcwd() + '/output/' +
-                                 os.path.basename(path) + ".mp3")
-            if (os.path.exists(audio)):
+        try:
+            if (path.lower().endswith(('.mp4'))):
+                import moviepy.editor as mp
+                self.ids.percentage.text = "Converting..."
+                audio = os.path.join(os.getcwd() + '/output/' +
+                                     os.path.basename(path) + ".mp3")
+                if (os.path.exists(audio)):
+                    self.convert(model, audio)
+                    return
+
+                clip = mp.VideoFileClip(path)
+                clip.audio.write_audiofile(audio)
                 self.convert(model, audio)
                 return
 
-            clip = mp.VideoFileClip(path)
-            clip.audio.write_audiofile(audio)
-            self.convert(model, audio)
-            return
+            self.ids.percentage.text = "Preparing model"
+            device = "cuda:0" if torch.cuda.is_available() else "cpu"
+            dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
-        device = "cuda:0" if torch.cuda.is_available() else "cpu"
-        dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+            model_id = "openai/whisper-large-v3"
 
-        model_id = "openai/whisper-large-v3"
+            model = AutoModelForSpeechSeq2Seq.from_pretrained(
+                model_id, torch_dtype=dtype, low_cpu_mem_usage=True,
+                use_safetensors=True
+            )
+            model.to(device)
 
-        model = AutoModelForSpeechSeq2Seq.from_pretrained(
-            model_id, torch_dtype=dtype, low_cpu_mem_usage=True,
-            use_safetensors=True
-        )
-        model.to(device)
+            processor = AutoProcessor.from_pretrained(model_id)
 
-        processor = AutoProcessor.from_pretrained(model_id)
+            pipe = pipeline(
+                "automatic-speech-recognition",
+                model=model,
+                tokenizer=processor.tokenizer,
+                feature_extractor=processor.feature_extractor,
+                max_new_tokens=128,
+                chunk_length_s=30,
+                batch_size=16,
+                return_timestamps=True,
+                torch_dtype=dtype,
+                device=device,
+            )
 
-        pipe = pipeline(
-            "automatic-speech-recognition",
-            model=model,
-            tokenizer=processor.tokenizer,
-            feature_extractor=processor.feature_extractor,
-            max_new_tokens=128,
-            chunk_length_s=30,
-            batch_size=16,
-            return_timestamps=True,
-            torch_dtype=dtype,
-            device=device,
-        )
+            json_output = os.getcwd() + '/output/' \
+                + os.path.basename(path) + ".json"
 
-        json_output = os.getcwd() + '/output/' \
-            + os.path.basename(path) + ".json"
+            self.ids.percentage.text = "Progressing (it may take several minutes)"
+            result = pipe(path)
+            self.save_json(os.path.join(json_output), result)
 
-        result = pipe(path)
-        self.save_json(os.path.join(json_output), result)
+            self.ids.percentage.text = "Making subtitle (.srt)"
+            srt = ""
+            from datetime import datetime, timedelta
 
-        srt = ""
-        from datetime import datetime, timedelta
+            def get_time(x):
+                time_delta = timedelta(seconds=x)
+                midnight = datetime.combine(
+                    datetime.today(), datetime.min.time())
+                r = midnight + time_delta
+                i = r.strftime('%H:%M:%S.%f')[:-3]
+                return i
 
-        def get_time(x):
-            time_delta = timedelta(seconds=x)
-            midnight = datetime.combine(datetime.today(), datetime.min.time())
-            r = midnight + time_delta
-            i = r.strftime('%H:%M:%S.%f')[:-3]
-            return i
+            for i, x in enumerate(result['chunks']):
+                srt += (str(i)+"\n")
+                srt += (get_time(x['timestamp'][0]) + " --> "
+                        + get_time(x['timestamp'][1]) + "\n")
+                srt += (x['text']+"\n")
+                srt += "\n"
 
-        for i, x in enumerate(result['chunks']):
-            srt += (str(i)+"\n")
-            srt += (get_time(x['timestamp'][0]) + " --> "
-                    + get_time(x['timestamp'][1]) + "\n")
-            srt += (x['text']+"\n")
-            srt += "\n"
+            srt_output = os.getcwd() + '/output/' \
+                + os.path.basename(path) + ".srt"
 
-        srt_output = os.getcwd() + '/output/' \
-            + os.path.basename(path) + ".srt"
+            self.save_string(srt_output, srt)
+            self.ids.percentage.text = "Completed"
 
-        self.save_string(srt_output, srt)
+            if (os.name == 'nt'):
+                path = os.getcwd() + "/output"
+                subprocess.run(['explorer', path])
+            else:
+                path = os.getcwd() + "/output"
+                subprocess.run(['open', path])
+
+            self.back()
+        except Exception as e:
+            self.ids.percentage.text = str(e)
+
         return
 
     def start(self, model, path):
@@ -181,6 +200,7 @@ class Audio2TextProgress(Screen):
         self.ids.model_name.text = "By: " + model
         self.ids.progress.value = 0
 
+        self.ids.percentage.text = "Initializing"
         thread = Thread(target=self.convert, args=(model, path))
         thread.start()
         # self.convert(model, path)

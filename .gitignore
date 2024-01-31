@@ -1,3 +1,6 @@
 .venv
 .vscode
 /output/*
+app.spec
+/build
+/dist

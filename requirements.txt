@@ -1,0 +1,17 @@
+accelerate==0.26.1
+datasets==2.16.1
+filelock==3.13.1
+imageio==2.33.1
+imageio-ffmpeg==0.4.9
+Kivy==2.3.0
+kivymd==1.2.0
+moviepy==1.0.3
+multidict==6.0.4
+multiprocess==0.70.15
+numpy==1.26.3
+plyer==2.1.0
+safetensors==0.4.2
+torch==2.1.2
+tqdm==4.66.1
+transformers @ git+https://github.com/huggingface/transformers@03cc17775b961d16cc4d0d7ab0c8487120d0b708
+

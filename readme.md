@@ -1,5 +1,5 @@
 Make a new environment \
-```python venv -m .venv``` \
+```python -m venv .venv``` \
 Activate the env \
 ```.\.venv\Scripts\activate``` \
 Install Requirements \

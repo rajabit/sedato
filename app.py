@@ -112,6 +112,10 @@ class Audio2TextProgress(Screen):
                 self.ids.percentage.text = "Converting..."
                 audio = os.path.join(os.getcwd() + '/output/' +
                                      os.path.basename(path) + ".mp3")
+
+                if not (os.path.isdir(os.getcwd() + '/output/')):
+                    os.mkdir(os.getcwd() + '/output')
+
                 if (os.path.exists(audio)):
                     self.convert(model, audio)
                     return

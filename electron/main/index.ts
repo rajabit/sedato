@@ -48,7 +48,7 @@ const indexHtml = join(process.env.DIST, "index.html");
 async function createWindow() {
   win = new BrowserWindow({
     title: "Sedato",
-    icon: join(process.env.VITE_PUBLIC, "favicon.ico"),
+    icon: join(process.env.VITE_PUBLIC, "fire.png"),
     webPreferences: {
       preload,
     },

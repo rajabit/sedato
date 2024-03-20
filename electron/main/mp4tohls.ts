@@ -58,7 +58,7 @@ const usingSwap = (
       `-hide_banner`,
       `-y`,
       `-i`,
-      args.video,
+      `"${args.video}"`,
       `-codec`,
       `${args.codec}`,
       "-g",
@@ -103,6 +103,10 @@ const usingSwap = (
 
     let enc: string[] = [];
     let date = new Date().toISOString();
+
+    if (!fs.existsSync(`${path}/${date}`)) {
+      fs.mkdirSync(`${path}/${date}`, { recursive: true });
+    }
 
     if (args.encryption) {
       let iv: string = args.signIV || crypto.randomBytes(16).toString("hex");
@@ -186,14 +190,14 @@ const convert_audio = async (
 ) => {
   if (args.audios.length == 0) {
     if (!fs.existsSync(`${path}/audio`)) {
-      fs.mkdirSync(`${path}/audio`);
+      fs.mkdirSync(`${path}/audio`, { recursive: true });
     }
 
     let array: string[] = [
       `-hide_banner`,
       `-y`,
       `-i`,
-      args.video,
+      `"${args.video}"`,
       `-muxdelay`,
       `0`,
       `-c:a`,
@@ -274,14 +278,14 @@ const convert_multiple_audio = (
 ): Promise<number> => {
   return new Promise((resolve) => {
     if (!fs.existsSync(`${path}/audio-${args.audios[index].code}`)) {
-      fs.mkdirSync(`${path}/audio-${args.audios[index].code}`);
+      fs.mkdirSync(`${path}/audio-${args.audios[index].code}`, { recursive: true });
     }
 
     let array: string[] = [
       `-hide_banner`,
       `-y`,
       `-i`,
-      args.audios[index].path,
+      `"${args.audios[index].path}"`,
       `-muxdelay`,
       `0`,
       `-c:a`,

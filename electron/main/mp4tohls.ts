@@ -102,7 +102,7 @@ const usingSwap = (
     }
 
     let enc: string[] = [];
-    let date = new Date().toISOString();
+    let date = new Date().toISOString().replaceAll(":", "-");
 
     if (!fs.existsSync(`${path}/${date}`)) {
       fs.mkdirSync(`${path}/${date}`, { recursive: true });
@@ -154,8 +154,7 @@ const usingSwap = (
 
     let proc = spawn(ffmpegPath ?? "", array, {
       shell: true,
-      detached: true,
-      stdio: ["ignore"],
+      stdio: ["pipe", "pipe", "ignore"],
       timeout: args.timeout,
     });
 
@@ -226,8 +225,7 @@ const convert_audio = async (
 
     let proc = spawn(ffmpegPath ?? "", array, {
       shell: true,
-      detached: true,
-      stdio: ["ignore"],
+      stdio: ["pipe", "pipe", "ignore"],
       timeout: args.timeout,
     });
 
@@ -278,7 +276,9 @@ const convert_multiple_audio = (
 ): Promise<number> => {
   return new Promise((resolve) => {
     if (!fs.existsSync(`${path}/audio-${args.audios[index].code}`)) {
-      fs.mkdirSync(`${path}/audio-${args.audios[index].code}`, { recursive: true });
+      fs.mkdirSync(`${path}/audio-${args.audios[index].code}`, {
+        recursive: true,
+      });
     }
 
     let array: string[] = [
@@ -314,8 +314,7 @@ const convert_multiple_audio = (
 
     let proc = spawn(ffmpegPath ?? "", array, {
       shell: true,
-      detached: true,
-      stdio: ["ignore"],
+      stdio: ["pipe", "pipe", "ignore"],
       timeout: args.timeout,
     });
 

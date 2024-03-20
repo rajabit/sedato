@@ -1,5 +1,4 @@
 import { convertInterface } from "types/hls";
-import ffmpegPath from "ffmpeg-static";
 import { spawn } from "child_process";
 import fs from "fs";
 import crypto from "crypto";
@@ -72,6 +71,8 @@ const usingSwap = (
       "-ar",
       "48000",
     ];
+
+    let current_path: string = "ffmpeg";
 
     for (let i: number = 0; i < args.qualities.length; i++) {
       array.push("-map");
@@ -150,9 +151,9 @@ const usingSwap = (
       `"${path}/sedato/${date}/%v/${args.section}.m3u8"`,
     ];
 
-    callback("command", `${ffmpegPath ?? ""} ${array.join(" ")}`);
+    callback("command", `${current_path} ${array.join(" ")}`);
 
-    let proc = spawn(ffmpegPath ?? "", array, {
+    let proc = spawn(current_path, array, {
       shell: true,
       stdio: ["pipe", "pipe", "ignore"],
       timeout: args.timeout,
@@ -171,7 +172,7 @@ const usingSwap = (
     });
 
     proc.on("close", (code) => {
-      convert_audio(args, `${path}/sedato/${date}`, callback);
+      convert_audio(args, `${path}/sedato/${date}`, current_path, callback);
     });
 
     proc.on("error", function (err) {
@@ -185,6 +186,7 @@ const usingSwap = (
 const convert_audio = async (
   args: convertInterface,
   path: string,
+  current_path: string,
   callback: (stat: string, data: any) => void
 ) => {
   if (args.audios.length == 0) {
@@ -223,7 +225,7 @@ const convert_audio = async (
       `"${path}/audio/main.m3u8"`,
     ];
 
-    let proc = spawn(ffmpegPath ?? "", array, {
+    let proc = spawn(current_path, array, {
       shell: true,
       stdio: ["pipe", "pipe", "ignore"],
       timeout: args.timeout,
@@ -259,7 +261,7 @@ const convert_audio = async (
     });
   } else {
     for (let i = 0; i < args.audios.length; i++) {
-      await convert_multiple_audio(args, path, i, callback);
+      await convert_multiple_audio(args, path, current_path, i, callback);
     }
     callback("finished", {
       code: 1,
@@ -271,6 +273,7 @@ const convert_audio = async (
 const convert_multiple_audio = (
   args: convertInterface,
   path: string,
+  current_path: string,
   index: number,
   callback: (stat: string, data: any) => void
 ): Promise<number> => {
@@ -312,7 +315,7 @@ const convert_multiple_audio = (
       `"${path}/audio-${args.audios[index].code}/main.m3u8"`,
     ];
 
-    let proc = spawn(ffmpegPath ?? "", array, {
+    let proc = spawn(current_path, array, {
       shell: true,
       stdio: ["pipe", "pipe", "ignore"],
       timeout: args.timeout,

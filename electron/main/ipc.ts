@@ -28,7 +28,6 @@ export function ipcList(win: BrowserWindow) {
   );
 
   ipcMain.handle("open-folder", (e: Electron.IpcMainInvokeEvent, args: any) => {
-    // shell.showItemInFolder(args.path);
     shell.openPath(args.path.replaceAll("/", "\\"));
   });
 }

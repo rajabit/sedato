@@ -1,6 +1,7 @@
 import { BrowserWindow, dialog, ipcMain, app, shell } from "electron";
 import { convertInterface, convertStat } from "types/hls";
-import mp4tohls from "./mp4tohls";
+import { usingSwap, check_ffmpeg } from "./mp4tohls";
+import { spawn } from "child_process";
 
 export function ipcList(win: BrowserWindow) {
   ipcMain.handle("open-file", (e: Electron.IpcMainInvokeEvent, args) => {
@@ -18,8 +19,8 @@ export function ipcList(win: BrowserWindow) {
   ipcMain.handle(
     "video-to-hls-start",
     (e: Electron.IpcMainInvokeEvent, args: convertInterface) => {
-      mp4tohls(args, app.getPath("documents"), (s, a) =>
-        win?.webContents.send("video-to-hls-start-status", {
+      usingSwap(args, app.getPath("documents"), (s, a) =>
+        win?.webContents.send("video-to-hls-status", {
           stat: s,
           data: a,
         } as convertStat)
@@ -30,4 +31,19 @@ export function ipcList(win: BrowserWindow) {
   ipcMain.handle("open-folder", (e: Electron.IpcMainInvokeEvent, args: any) => {
     shell.openPath(args.path.replaceAll("/", "\\"));
   });
+
+  ipcMain.handle(
+    "check-ffmpeg",
+    (e: Electron.IpcMainInvokeEvent, args: any) => {
+      check_ffmpeg();
+    }
+  );
+
+  ipcMain.handle(
+    "video-to-hls-stop",
+    (e: Electron.IpcMainInvokeEvent, args: any) => {
+      console.log(`killing`, args);
+      spawn("taskkill", ["/pid", args, "/f", "/t"]);
+    }
+  );
 }

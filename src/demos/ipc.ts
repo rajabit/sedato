@@ -7,7 +7,7 @@ const listen = (
   return window.ipcRenderer.on(event, listener);
 };
 
-const invoke = (event: string, args: any): Promise<any> => {
+const invoke = (event: string, args?: any): Promise<any> => {
   return window.ipcRenderer.invoke(event, args);
 };
 

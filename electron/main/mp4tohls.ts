@@ -1,5 +1,5 @@
 import { convertInterface } from "types/hls";
-import { spawn } from "child_process";
+import { spawn, spawnSync } from "child_process";
 import fs from "fs";
 import crypto from "crypto";
 
@@ -170,7 +170,7 @@ const usingSwap = (
           progress[item[0]] = item[1];
         }
       }
-      callback("progress", progress);
+      callback("progress", { pid: proc.pid, ...progress });
     });
 
     proc.on("close", (code) => {
@@ -242,7 +242,7 @@ const convert_audio = async (
           progress[item[0]] = item[1];
         }
       }
-      callback("progress", progress);
+      callback("progress", { pid: proc.pid, ...progress });
     });
 
     proc.on("close", (code) => {
@@ -332,7 +332,7 @@ const convert_multiple_audio = (
           progress[item[0]] = item[1];
         }
       }
-      callback("progress", progress);
+      callback("progress", { pid: proc.pid, ...progress });
     });
 
     proc.on("close", (code) => {
@@ -357,4 +357,18 @@ const convert_multiple_audio = (
   });
 };
 
-export default usingSwap;
+const check_ffmpeg = () => {
+  try {
+    const res = spawnSync("ffmpeg");
+    if (res.error != null && res.error.message.includes("ENOENT")) {
+      spawn("winget", ["install", "ffmpeg"], {
+        shell: true,
+        detached: true,
+      });
+    }
+  } catch (ex) {
+    console.log(`error`, ex);
+  }
+};
+
+export { check_ffmpeg, usingSwap };

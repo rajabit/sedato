@@ -5,13 +5,15 @@ import {
   ChevronRightIcon,
   ExclamationTriangleIcon,
   FolderIcon,
+  NoSymbolIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { audioInterface, convertInterface, convertStat } from "types/hls";
 import LoadingSVG from "./LoadingSVG";
 
 const VideoToHls = () => {
+  const [mount, setMount] = useState<boolean>(false);
   const [video, setVideo] = useState<string>("");
   const [signIV, setSignIV] = useState<string>("");
   const [sign, setSign] = useState<string>("");
@@ -137,12 +139,22 @@ const VideoToHls = () => {
     array.splice(i, 1);
     setAudios(array);
   };
+  const stopProgress = (pid?: number) => {
+    if (pid == null) return;
+    invoke("video-to-hls-stop", pid);
+  };
 
-  listen("video-to-hls-start-status", (event, args: convertStat) => {
-    console.log(args.stat, args.data);
-    setStat(args.stat);
-    setData(args.data);
-  });
+  useEffect(() => {
+    console.log(`mounted`);
+    if (!mount) {
+      invoke("check-ffmpeg");
+      listen("video-to-hls-status", (event, args: convertStat) => {
+        setStat(args.stat);
+        setData(args.data);
+      });
+      setMount(true);
+    }
+  }, []);
 
   switch (stat) {
     case "index":
@@ -224,7 +236,7 @@ const VideoToHls = () => {
                       <span>240p (426 x 240) ~ 250-400 kbps</span>
                     </label>
                   </li>
-                  {/* <li>
+                  <li>
                     <label>
                       <input
                         title="360"
@@ -236,7 +248,7 @@ const VideoToHls = () => {
                       />
                       <span>360p (640 x 360) ~ 400-700 kbps</span>
                     </label>
-                  </li> */}
+                  </li>
                   <li>
                     <label>
                       <input
@@ -584,6 +596,16 @@ const VideoToHls = () => {
                 <FolderIcon /> Open Folder
               </button>
             </>
+          )}
+          {stat == "progress" && data["pid"] != null && (
+            <button
+              onClick={() => stopProgress(data["pid"])}
+              type="button"
+              className="btn slate mt-3"
+            >
+              <NoSymbolIcon />
+              Stop / Ignore
+            </button>
           )}
           {(stat == "error" || stat == "finished") && (
             <button

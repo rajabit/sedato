@@ -208,6 +208,14 @@ body {
     @apply w-6 h-6 me-4
   }
 
+  .list>.item>.content {
+    @apply grow;
+  }
+
+  .list>.item>.action {
+    @apply shrink;
+  }
+
   .drawer-button {
     @apply w-full flex justify-start items-center cursor-pointer rounded-none bg-transparent border-none px-4 py-2 text-white hover:text-white/80 hover:bg-white/20 duration-150 shadow active:bg-white/20 focus:bg-white/30;
   }

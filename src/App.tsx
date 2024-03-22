@@ -2,8 +2,10 @@ import { useState } from "react";
 import {
   VideoCameraIcon,
   FireIcon,
+  ChatBubbleBottomCenterIcon,
 } from "@heroicons/react/24/outline";
 import VideoToHls from "./components/VideoToHls";
+import VideoToText from "./components/VideoToText";
 
 function App() {
   const [route, setRoute] = useState(0);
@@ -14,6 +16,12 @@ function App() {
       title: "Video to Hls",
       icon: <VideoCameraIcon />,
       component: <VideoToHls />,
+    },
+    {
+      id: 1,
+      title: "Video To Text",
+      icon: <ChatBubbleBottomCenterIcon />,
+      component: <VideoToText />,
     },
   ];
 

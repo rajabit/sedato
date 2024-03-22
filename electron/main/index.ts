@@ -2,7 +2,8 @@ import { app, BrowserWindow, shell, ipcMain } from "electron";
 import { release } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ipcList } from "./ipc";
+import video2hlsIpc from "./video2hlsIpc";
+import video2textIpc from "./video2textIpc";
 
 globalThis.__filename = fileURLToPath(import.meta.url);
 globalThis.__dirname = dirname(__filename);
@@ -70,7 +71,8 @@ async function createWindow() {
     return { action: "deny" };
   });
 
-  ipcList(win);
+  video2hlsIpc(win);
+  video2textIpc(win);
 }
 
 app.whenReady().then(createWindow);

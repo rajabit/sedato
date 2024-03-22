@@ -105,8 +105,8 @@ const usingSwap = (
     let enc: string[] = [];
     let date = new Date().toISOString().replaceAll(":", "-");
 
-    if (!fs.existsSync(`${path}/${date}`)) {
-      fs.mkdirSync(`${path}/${date}`, { recursive: true });
+    if (!fs.existsSync(`${path}/sedato/${date}`)) {
+      fs.mkdirSync(`${path}/sedato/${date}`, { recursive: true });
     }
 
     if (args.encryption) {

@@ -2,7 +2,7 @@ import { spawn, spawnSync } from "child_process";
 import { ValidationStatus } from "types/video2text";
 import { app } from "electron";
 import path from "path";
-import fs, { mkdir } from "fs";
+import fs from "fs";
 
 const check_python_installation = async (
   callback: (args: ValidationStatus) => void,
@@ -39,9 +39,9 @@ const check_python_installation = async (
           } as ValidationStatus);
         });
 
-        proc.on("close", (code) => {
+        proc.on("close", async (code) => {
           if (tries > 0) {
-            check_python_installation(callback, tries - 1);
+            resolve(await check_python_installation(callback, tries - 1));
           } else {
             callback({
               verified: false,
@@ -51,9 +51,9 @@ const check_python_installation = async (
           }
         });
 
-        proc.on("error", function (err) {
+        proc.on("error", async (err) => {
           if (tries > 0) {
-            check_python_installation(callback, tries - 1);
+            resolve(await check_python_installation(callback, tries - 1));
           } else {
             callback({
               verified: false,
@@ -80,7 +80,7 @@ const check_python_installation = async (
 const setup_venv = async (
   callback: (args: ValidationStatus) => void,
   tries: number = 3
-) => {
+): Promise<string> => {
   return new Promise((resolve) => {
     try {
       let doc_path: string = app.getPath("documents") + "/sedato/.venv";
@@ -107,9 +107,9 @@ const setup_venv = async (
           } as ValidationStatus);
         });
 
-        proc.on("close", (code) => {
+        proc.on("close", async (code) => {
           if (tries > 0) {
-            setup_venv(callback, tries - 1);
+            resolve(await setup_venv(callback, tries - 1));
           } else {
             callback({
               status: "failed",
@@ -118,9 +118,9 @@ const setup_venv = async (
           }
         });
 
-        proc.on("error", function (err) {
+        proc.on("error", async (err) => {
           if (tries > 0) {
-            setup_venv(callback, tries - 1);
+            resolve(await setup_venv(callback, tries - 1));
           } else {
             callback({
               status: "failed",
@@ -143,7 +143,7 @@ const setup_venv = async (
   });
 };
 
-const install_modules = async (
+const install_modules_torch = async (
   callback: (args: ValidationStatus) => void,
   tries: number = 3
 ): Promise<string> => {
@@ -152,7 +152,7 @@ const install_modules = async (
       callback({
         status: "progressing",
       });
-      
+
       let python: string =
         app.getPath("documents") + "/sedato/.venv/Scripts/python.exe";
       let command: string =
@@ -160,10 +160,96 @@ const install_modules = async (
 
       copy_from_archive("public/additional/video2text.py", command);
 
-      const res = spawnSync(python, [command, "-c"]);
+      const res = spawnSync(python, [command, "-cto"]);
       let result = res.output.toString().replaceAll(",", "").trim();
 
       if (result == "installed") {
+        callback({
+          status: "checked",
+        });
+        resolve("checked");
+        return;
+      }
+
+      let pip: string =
+        app.getPath("documents") + "/sedato/.venv/Scripts/pip3.exe";
+
+      const proc = spawn(
+        pip,
+        [
+          "install",
+          "torch",
+          "torchvision",
+          "torchaudio",
+          "--index-url",
+          "https://download.pytorch.org/whl/cu118",
+        ],
+        {
+          shell: true,
+          detached: true,
+          stdio: ["pipe", "pipe", "ignore"],
+          timeout: 500000,
+        }
+      );
+
+      proc?.stdout?.on("data", function (data) {
+        callback({
+          status: "progressing",
+        } as ValidationStatus);
+      });
+
+      proc.on("close", async (code) => {
+        if (tries > 0) {
+          resolve(await install_modules_torch(callback, tries - 1));
+        } else {
+          callback({
+            status: "failed",
+          } as ValidationStatus);
+          resolve("failed");
+        }
+      });
+
+      proc.on("error", async (err) => {
+        if (tries > 0) {
+          resolve(await install_modules_torch(callback, tries - 1));
+        } else {
+          callback({
+            status: "failed",
+          } as ValidationStatus);
+          resolve("failed");
+        }
+      });
+    } catch (ex) {
+      callback({
+        status: "failed",
+      } as ValidationStatus);
+      resolve("failed");
+    }
+  });
+};
+
+const install_modules_transformer = async (
+  callback: (args: ValidationStatus) => void,
+  tries: number = 3
+): Promise<string> => {
+  return new Promise((resolve) => {
+    try {
+      callback({
+        status: "progressing",
+      });
+
+      let python: string =
+        app.getPath("documents") + "/sedato/.venv/Scripts/python.exe";
+      let command: string =
+        app.getPath("documents") + "/sedato/video2text/video2text.py";
+
+      const res = spawnSync(python, [command, "-ctr"]);
+      let result = res.output.toString().replaceAll(",", "").trim();
+
+      if (result == "installed") {
+        callback({
+          status: "checked",
+        });
         resolve("checked");
         return;
       }
@@ -175,7 +261,7 @@ const install_modules = async (
 
       fs.writeFileSync(
         requirements,
-        "torch\ngit+https://github.com/huggingface/transformers.git\naccelerate\ndatasets[audio]"
+        "git+https://github.com/huggingface/transformers.git\naccelerate\ndatasets[audio]"
       );
 
       const proc = spawn(pip, ["install", "-r", requirements], {
@@ -191,9 +277,9 @@ const install_modules = async (
         } as ValidationStatus);
       });
 
-      proc.on("close", (code) => {
+      proc.on("close", async (code) => {
         if (tries > 0) {
-          install_modules(callback, tries - 1);
+          resolve(await install_modules_transformer(callback, tries - 1));
         } else {
           callback({
             status: "failed",
@@ -202,9 +288,9 @@ const install_modules = async (
         }
       });
 
-      proc.on("error", function (err) {
+      proc.on("error", async (err) => {
         if (tries > 0) {
-          install_modules(callback, tries - 1);
+          resolve(await install_modules_transformer(callback, tries - 1));
         } else {
           callback({
             status: "failed",
@@ -213,6 +299,48 @@ const install_modules = async (
         }
       });
     } catch (ex) {
+      callback({
+        status: "failed",
+      } as ValidationStatus);
+      resolve("failed");
+    }
+  });
+};
+
+const cuda_available = async (
+  callback: (args: ValidationStatus) => void,
+  tries: number = 3
+): Promise<string> => {
+  return new Promise((resolve) => {
+    try {
+      callback({
+        status: "progressing",
+      });
+      let python: string =
+        app.getPath("documents") + "/sedato/.venv/Scripts/python.exe";
+      let command: string =
+        app.getPath("documents") + "/sedato/video2text/video2text.py";
+
+      const res = spawnSync(python, [command, "-cuda"]);
+      let result = res.output.toString().replaceAll(",", "").trim();
+
+      if (result == "available") {
+        callback({
+          status: "checked",
+        });
+        resolve("checked");
+        return;
+      } else {
+        callback({
+          status: "unavailable",
+        });
+        resolve("checked");
+        return;
+      }
+    } catch (ex) {
+      callback({
+        status: "failed",
+      } as ValidationStatus);
       resolve("failed");
     }
   });
@@ -222,32 +350,34 @@ const validate = async (
   callback: (event: string, args: ValidationStatus) => void
 ) => {
   /** python installation */
-  {
-    if (
-      (await check_python_installation((data) =>
-        callback("python-installation", data)
-      )) == "failed"
-    )
-      return;
-  }
+  let step1 = await check_python_installation((data) =>
+    callback("python-installation", data)
+  );
+  console.log(`step 1 check_python_installation`, step1);
+  if (step1 == "failed") return;
 
   /** setup venv */
-  {
-    if (
-      (await setup_venv((data) => callback("setup-venv", data))) == "failed"
-    ) {
-      return;
-    }
-  }
+  let step2 = await setup_venv((data) => callback("setup-venv", data));
+  console.log(`step 2 setup_venv`, step2);
+  if (step2 == "failed") return;
 
   /** module installation */
-  {
-    if (
-      (await install_modules((data) => callback("install-modules", data))) ==
-      "failed"
-    )
-      return;
-  }
+  let step3 = await install_modules_torch((data) =>
+    callback("install-modules", data)
+  );
+  console.log(`step 3 install_modules`, step3);
+  if (step3 == "failed") return;
+
+  let step4 = await install_modules_transformer((data) =>
+    callback("install-modules", data)
+  );
+  console.log(`step 4 install_modules`, step3);
+  if (step4 == "failed") return;
+
+  /** cuda available */
+  let step5 = await cuda_available((data) => callback("cuda-available", data));
+  console.log(`step 5 cuda_available`, step3);
+  if (step3 == "failed") return;
 };
 
 const copy_from_archive = (source: string, dest: string) => {

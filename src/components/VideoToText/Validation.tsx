@@ -1,7 +1,7 @@
 import { invoke, listen } from "@/demos/ipc";
 import {
+  ArrowDownIcon,
   CheckIcon,
-  ChevronRightIcon,
   ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
@@ -14,6 +14,7 @@ const VideoToTextValidation = () => {
     useState<string>("pending");
   const [pythonVenv, setPythonVenv] = useState<string>("pending");
   const [installModules, setInstallModules] = useState<string>("pending");
+  const [cudaAvailable, setCudaAvailable] = useState<string>("pending");
 
   const setup = () => {
     listen("python-installation", (event, args: ValidationStatus) => {
@@ -26,6 +27,10 @@ const VideoToTextValidation = () => {
 
     listen("install-modules", (event, args: ValidationStatus) => {
       setInstallModules(args.status);
+    });
+
+    listen("cuda-available", (event, args: ValidationStatus) => {
+      setCudaAvailable(args.status);
     });
 
     invoke("video2text-validate");
@@ -58,16 +63,18 @@ const VideoToTextValidation = () => {
           </div>
         );
       case "pending":
+        return <div className="flex items-center justify-center">{state}</div>;
+      case "progressing":
         return (
           <div className="flex items-center justify-center">
             <LoadingSVG />
             {state}
           </div>
         );
-      case "progressing":
+      case "unavailable":
         return (
-          <div className="flex items-center justify-center">
-            <LoadingSVG />
+          <div className="flex items-center justify-center text-yellow-600">
+            <ExclamationCircleIcon className="w-6 h-6 me-0 mr-0" />
             {state}
           </div>
         );
@@ -94,15 +101,21 @@ const VideoToTextValidation = () => {
       </div>
       <div className="item">
         <div className="content">
-          <div className="title">Install Modules</div>
+          <div className="title">Module Installation</div>
         </div>
         <div className="action capitalize">{stateStyle(installModules)}</div>
+      </div>
+      <div className="item">
+        <div className="content">
+          <div className="title">Cuda Available</div>
+        </div>
+        <div className="action capitalize">{stateStyle(cudaAvailable)}</div>
       </div>
     </div>
   ) : (
     <div>
       <button onClick={start} className="btn primary" type="button">
-        <ChevronRightIcon />
+        <ArrowDownIcon />
         Click to Start validate
       </button>
     </div>

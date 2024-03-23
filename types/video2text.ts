@@ -1,6 +1,6 @@
 interface ValidationStatus {
   data?: any;
-  status: "pending" | "progressing" | "checked" | "failed";
+  status: "pending" | "progressing" | "checked" | "failed" | "unavailable";
 }
 
 export type { ValidationStatus };

@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from "child_process";
-import { ValidationStatus } from "types/video2text";
+import { ValidationStatus, ConvertStatus } from "types/video2text";
 import { app } from "electron";
 import path from "path";
 import fs from "fs";
@@ -392,4 +392,59 @@ const copy_from_archive = (source: string, dest: string) => {
   }
 };
 
-export { validate };
+const convert = (
+  input: string,
+  callback: (data: ConvertStatus) => void
+): void => {
+  let python: string =
+    app.getPath("documents") + "/sedato/.venv/Scripts/python.exe";
+  let command: string =
+    app.getPath("documents") + "/sedato/video2text/video2text.py";
+
+  let date = new Date().toISOString().replaceAll(":", "-");
+  let output: string =
+    app.getPath("documents") + `/output/video2text/${date}.json`;
+
+  console.log(`command`, `${python} ${command} -i ${input} -o ${output}`);
+
+  try {
+    const proc = spawn(python, [command, "-i", input, "-o", output], {
+      shell: true,
+      detached: true,
+      stdio: ["pipe", "pipe", "ignore"],
+      timeout: 10000,
+    });
+
+    proc?.stdout?.on("data", function (data) {
+      callback({
+        status: "progressing",
+      } as ConvertStatus);
+    });
+
+    proc.on("close", async (code) => {
+      if (fs.existsSync(output)) {
+        callback({
+          status: "finished",
+          data: output,
+        } as ConvertStatus);
+      } else {
+        callback({
+          status: "failed",
+        } as ConvertStatus);
+      }
+    });
+
+    proc.on("error", async (err) => {
+      console.error(err);
+      callback({
+        status: "failed",
+      } as ConvertStatus);
+    });
+  } catch (ex) {
+    callback({
+      status: "failed",
+    } as ConvertStatus);
+  }
+};
+
+export { validate, convert };

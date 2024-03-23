@@ -182,7 +182,7 @@ const VideoToHls = () => {
 
             <div className="card mb-5">
               <div className="title">Video Information</div>
-              <div className="subtitle">Select video and watermark file</div>
+              <div className="subtitle">Select video file</div>
               <div className="content">
                 <div className="form-section">
                   <label htmlFor="video">Video file</label>

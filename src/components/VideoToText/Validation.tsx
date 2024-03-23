@@ -42,10 +42,6 @@ const VideoToTextValidation = () => {
     setup();
   };
 
-  const loaded = () => {
-    console.log(`loaded`);
-  };
-
   const stateStyle = (state: string) => {
     switch (state) {
       case "checked":
@@ -114,9 +110,9 @@ const VideoToTextValidation = () => {
     </div>
   ) : (
     <div>
-      <button onClick={start} className="btn primary" type="button">
+      <button onClick={start} className="btn slate" type="button">
         <ArrowDownIcon />
-        Click to Start validate
+        Click to Check and install requirements
       </button>
     </div>
   );

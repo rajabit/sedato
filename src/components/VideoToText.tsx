@@ -52,13 +52,19 @@ const VideoToText = () => {
       data: null,
     });
   };
+
   switch (stat.status) {
     case "progressing":
       return (
         <div className="m-7 flex flex-col items-start">
           <div className="flex justify-start items-center">
             <LoadingSVG />
-            <label className="ms-3">Progressing...</label>
+            <div className="flex ms-3 flex-col items-start justify-start">
+              <label className="">Progressing...</label>
+              <small className="text-sm text-white/50">
+                Video/Audio processing time may vary based on content length.
+              </small>
+            </div>
           </div>
         </div>
       );
@@ -70,19 +76,25 @@ const VideoToText = () => {
             <label className="ms-3 text-green-600">Finished</label>
           </div>
           <div>
-            Output Path:{" "}
+            Output Path: <br />
             <small className="text-slate-400 ps-1 text-sm">{stat.data}</small>
           </div>
-          <button
-            onClick={() => openFolder(stat.data)}
-            type="button"
-            className="btn slate mt-3"
-          >
-            <FolderIcon /> Open Folder
-          </button>
-          <button onClick={clearForm} type="button" className="btn slate">
-            Start another
-          </button>
+          <div className="flex items-end">
+            <button
+              onClick={() => openFolder(stat.data)}
+              type="button"
+              className="btn slate mt-3  h-10"
+            >
+              <FolderIcon /> Open File
+            </button>
+            <button
+              onClick={clearForm}
+              type="button"
+              className="btn ms-3 slate h-10"
+            >
+              Start another
+            </button>
+          </div>
         </div>
       );
     case "failed":
@@ -92,7 +104,6 @@ const VideoToText = () => {
             <ExclamationTriangleIcon className="text-red-600" />
             <label className="ms-3 text-red-600">Failed</label>
           </div>
-
           <button onClick={goBack} type="button" className="btn slate mt-5">
             <ArrowLeftIcon />
             Restart

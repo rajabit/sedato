@@ -157,7 +157,7 @@ const usingSwap = (
 
     let proc = spawn(current_path, array, {
       shell: true,
-      stdio: ["pipe", "pipe", "ignore"],
+      stdio: ["pipe", "pipe", "inherit"],
       timeout: args.timeout,
     });
 
@@ -229,7 +229,7 @@ const convert_audio = async (
 
     let proc = spawn(current_path, array, {
       shell: true,
-      stdio: ["pipe", "pipe", "ignore"],
+      stdio: ["pipe", "pipe", "inherit"],
       timeout: args.timeout,
     });
 
@@ -319,7 +319,7 @@ const convert_multiple_audio = (
 
     let proc = spawn(current_path, array, {
       shell: true,
-      stdio: ["pipe", "pipe", "ignore"],
+      stdio: ["pipe", "pipe", "inherit"],
       timeout: args.timeout,
     });
 

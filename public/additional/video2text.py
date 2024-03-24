@@ -1,3 +1,4 @@
+import json
 from argparse import ArgumentParser
 import os
 
@@ -11,10 +12,10 @@ parser.add_argument("-cto", "--check-torch", dest="check_torch", default=False,
 parser.add_argument("-ctr", "--check-transformers", dest="check_transformers", default=False,
                     action="store_true",  help="Check transformers Installation")
 
-parser.add_argument("-i", "--input", dest="file", default=None, required=False,
+parser.add_argument("-i", "--input", dest="input", default=None, required=False,
                     metavar="FILE", help="Source video / audio")
 
-parser.add_argument("-o", "--output", dest="file", default=None, required=False,
+parser.add_argument("-o", "--output", dest="output", default=None, required=False,
                     metavar="FILE", help="Output text")
 
 args = parser.parse_args()
@@ -48,8 +49,9 @@ def cuda():
         print("not installed")
 
 
-def convert(input, output=None):
+def convert(input, out=None):
     if not os.path.isfile(input):
+        print(input)
         print("File not exists")
         return
 
@@ -90,9 +92,13 @@ def convert(input, output=None):
     )
 
     result = pipe(input)
-    output = output is None if input + ".json" else output
-    with open(output, 'w', encoding='utf-8') as f:
-        json.dump(result, f, ensure_ascii=False, indent=4)
+
+    if out is None:
+        out = input + ".json"
+
+    f = open(out, "w", encoding='utf-8')
+    f.write(json.dumps(result, ensure_ascii=False, indent=2))
+    f.close()
 
 
 if args.cuda:
@@ -101,5 +107,5 @@ elif args.check_torch:
     check_torch()
 elif args.check_transformers:
     check_transformers()
-elif args.file is not None:
-    convert(args.file)
+elif args.input is not None:
+    convert(args.input, args.output)

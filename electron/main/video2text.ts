@@ -1,4 +1,4 @@
-import { spawn, spawnSync } from "child_process";
+import { spawn, spawnSync, exec } from "child_process";
 import { ValidationStatus, ConvertStatus } from "types/video2text";
 import { app } from "electron";
 import path from "path";
@@ -27,7 +27,7 @@ const check_python_installation = async (
           ["install", "-e", "--id", "Python.Python.3.10"],
           {
             shell: true,
-            stdio: ["pipe", "pipe", "ignore"],
+            stdio: ["pipe", "pipe", "inherit"],
             timeout: 10000,
           }
         );
@@ -97,7 +97,7 @@ const setup_venv = async (
 
         const proc = spawn("python", ["-m", "venv", doc_path], {
           shell: true,
-          stdio: ["pipe", "pipe", "ignore"],
+          stdio: ["pipe", "pipe", "inherit"],
           timeout: 10000,
         });
 
@@ -187,7 +187,7 @@ const install_modules_torch = async (
         {
           shell: true,
           detached: true,
-          stdio: ["pipe", "pipe", "ignore"],
+          stdio: ["pipe", "pipe", "inherit"],
           timeout: 500000,
         }
       );
@@ -267,7 +267,7 @@ const install_modules_transformer = async (
       const proc = spawn(pip, ["install", "-r", requirements], {
         shell: true,
         detached: true,
-        stdio: ["pipe", "pipe", "ignore"],
+        stdio: ["pipe", "pipe", "inherit"],
         timeout: 500000,
       });
 
@@ -396,24 +396,36 @@ const convert = (
   input: string,
   callback: (data: ConvertStatus) => void
 ): void => {
-  let python: string =
-    app.getPath("documents") + "/sedato/.venv/Scripts/python.exe";
+  callback({
+    status: "progressing",
+  } as ConvertStatus);
+
+  let python_path: string = app.getPath("documents") + "/sedato/.venv/Scripts";
   let command: string =
     app.getPath("documents") + "/sedato/video2text/video2text.py";
 
   let date = new Date().toISOString().replaceAll(":", "-");
-  let output: string =
-    app.getPath("documents") + `/output/video2text/${date}.json`;
 
-  console.log(`command`, `${python} ${command} -i ${input} -o ${output}`);
+  if (!fs.existsSync(app.getPath("documents") + `/sedato/video2text/output`)) {
+    fs.mkdirSync(app.getPath("documents") + `/sedato/video2text/output`, {
+      recursive: true,
+    });
+  }
+
+  let output: string =
+    app.getPath("documents") + `/sedato/video2text/output/${date}.json`;
 
   try {
-    const proc = spawn(python, [command, "-i", input, "-o", output], {
-      shell: true,
-      detached: true,
-      stdio: ["pipe", "pipe", "ignore"],
-      timeout: 10000,
-    });
+    const proc = spawn(
+      `.\\python.exe`,
+      [command, "-i", `"${input}"`, "-o", `"${output}"`],
+      {
+        cwd: python_path,
+        shell: true,
+        stdio: ["pipe", "pipe", "inherit"],
+        timeout: 10000,
+      }
+    );
 
     proc?.stdout?.on("data", function (data) {
       callback({
@@ -435,7 +447,6 @@ const convert = (
     });
 
     proc.on("error", async (err) => {
-      console.error(err);
       callback({
         status: "failed",
       } as ConvertStatus);

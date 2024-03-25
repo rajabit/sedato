@@ -1,6 +1,6 @@
 {
   "name": "sedato",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "main": "dist-electron/main/index.js",
   "description": "Make hls streaming videos",
   "author": "96rajabi@gmail.com",

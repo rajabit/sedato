@@ -2,7 +2,7 @@ import { spawn, spawnSync, exec } from "child_process";
 import { ValidationStatus, ConvertStatus } from "types/video2text";
 import { app } from "electron";
 import path from "path";
-import fs from "fs";
+import fs from "node:fs";
 
 const check_python_installation = async (
   callback: (args: ValidationStatus) => void,
@@ -158,7 +158,7 @@ const install_modules_torch = async (
       let command: string =
         app.getPath("documents") + "/sedato/video2text/video2text.py";
 
-      copy_from_archive("public/additional/video2text.py", command);
+      copy_from_archive("./dist/additional/video2text.py", command);
 
       const res = spawnSync(python, [command, "-cto"]);
       let result = res.output.toString().replaceAll(",", "").trim();
@@ -381,13 +381,18 @@ const validate = async (
 };
 
 const copy_from_archive = (source: string, dest: string) => {
-  if (fs.existsSync(app.getAppPath() + `/${source}`)) {
-    if (fs.statSync(app.getAppPath() + `/${source}`).isFile()) {
+  source =
+    process.env.NODE_ENV === "development"
+      ? path.join(__dirname, "../../dist/additional/video2text.py")
+      : path.join(process.resourcesPath, "/dist/additional/video2text.py");
+
+  if (fs.existsSync(source)) {
+    if (fs.statSync(source).isFile()) {
       let dir = path.dirname(dest);
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
-      fs.writeFileSync(dest, fs.readFileSync(app.getAppPath() + `/${source}`));
+      fs.writeFileSync(dest, fs.readFileSync(source));
     }
   }
 };

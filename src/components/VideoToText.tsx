@@ -56,7 +56,7 @@ const VideoToText = () => {
   switch (stat.status) {
     case "progressing":
       return (
-        <div className="m-7 flex flex-col items-start">
+        <div className="m-7 flex flex-col items-start  pb-7">
           <div className="flex justify-start items-center">
             <LoadingSVG />
             <div className="flex ms-3 flex-col items-start justify-start">
@@ -70,7 +70,7 @@ const VideoToText = () => {
       );
     case "finished":
       return (
-        <div className="m-7 flex flex-col items-start">
+        <div className="m-7 flex flex-col items-start  pb-7">
           <div className="flex justify-start items-center">
             <CheckIcon className="text-green-600" />
             <label className="ms-3 text-green-600">Finished</label>
@@ -99,7 +99,7 @@ const VideoToText = () => {
       );
     case "failed":
       return (
-        <div className="m-7 flex flex-col items-start">
+        <div className="m-7 flex flex-col items-start  pb-7">
           <div className="flex justify-start items-center">
             <ExclamationTriangleIcon className="text-red-600" />
             <label className="ms-3 text-red-600">Failed</label>
@@ -112,7 +112,7 @@ const VideoToText = () => {
       );
     default:
       return (
-        <div className="m-7 flex flex-col">
+        <div className="m-7 flex flex-col pb-7">
           <form>
             <div className="flex justify-center items-center mb-5">
               <h1 className="text-2xl font-bold">Convert Video to Text</h1>

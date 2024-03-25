@@ -16,19 +16,19 @@
 
 @font-face {
   font-family: ubuntu;
-  src: url('fonts/Ubuntu/Ubuntu-Regular.ttf');
+  src: url('/dist/fonts/Ubuntu/Ubuntu-Regular.ttf');
   font-style: normal;
 }
 
 @font-face {
   font-family: ubuntu-bold;
-  src: url('fonts/Ubuntu/Ubuntu-Bold.ttf');
+  src: url('/dist/fonts/Ubuntu/Ubuntu-Bold.ttf');
   font-style: bold;
 }
 
 @font-face {
   font-family: ubuntu-italic;
-  src: url('fonts/Ubuntu/Ubuntu-Light.ttf');
+  src: url('/dist/fonts/Ubuntu/Ubuntu-Light.ttf');
   font-style: bold;
 }
 

@@ -1,4 +1,4 @@
-import json
+const video2textPython: string = `import json
 from argparse import ArgumentParser
 import os
 
@@ -109,3 +109,6 @@ elif args.check_transformers:
     check_transformers()
 elif args.input is not None:
     convert(args.input, args.output)
+`;
+
+export default video2textPython;

@@ -58,18 +58,12 @@ const usingSwap = (
       `-y`,
       `-i`,
       `"${args.video}"`,
-      `-codec`,
-      `${args.codec}`,
       "-g",
       "250",
-      "-crf",
-      "20",
       "-sc_threshold",
       "40",
       "-keyint_min",
       "25",
-      "-ar",
-      "48000",
       "-bf",
       "1",
     ];
@@ -103,6 +97,7 @@ const usingSwap = (
     }
 
     let enc: string[] = [];
+    let iv: string = args.signIV || crypto.randomBytes(16).toString("hex");
     let date = new Date().toISOString().replaceAll(":", "-");
 
     if (!fs.existsSync(`${path}/sedato/${date}`)) {
@@ -110,7 +105,6 @@ const usingSwap = (
     }
 
     if (args.encryption) {
-      let iv: string = args.signIV || crypto.randomBytes(16).toString("hex");
       if (args.sign.length > 0 && args.signUrl.length > 0) {
         fs.writeFileSync(
           `${path}/tmp.key`,
@@ -129,18 +123,12 @@ const usingSwap = (
       `${args.threads}`,
       `-master_pl_name`,
       `${args.master}`,
-      `-start_number`,
-      `0`,
-      `-f`,
-      `hls`,
       `-hls_time`,
       `${args.hlsTime}`,
       `-hls_allow_cache`,
       `1`,
       `-hls_segment_type`,
       `mpegts`,
-      `-hls_playlist_type`,
-      `vod`,
       `-hls_list_size`,
       `0`,
       ...enc,
@@ -174,7 +162,7 @@ const usingSwap = (
     });
 
     proc.on("close", (code) => {
-      convert_audio(args, `${path}/sedato/${date}`, current_path, callback);
+      convert_audio(args, `${path}/sedato/${date}`, current_path, iv, callback);
     });
 
     proc.on("error", function (err) {
@@ -189,6 +177,7 @@ const convert_audio = async (
   args: convertInterface,
   path: string,
   current_path: string,
+  iv: string,
   callback: (stat: string, data: any) => void
 ) => {
   if (args.audios.length == 0) {
@@ -196,15 +185,29 @@ const convert_audio = async (
       fs.mkdirSync(`${path}/audio`, { recursive: true });
     }
 
+    let enc: string[] = [];
+    if (args.encryption) {
+      if (args.sign.length > 0 && args.signUrl.length > 0) {
+        fs.writeFileSync(
+          `${path}/tmp.key`,
+          `${args.signUrl}\n${args.sign}\n${iv}`,
+          "utf-8"
+        );
+        enc = ["-hls_key_info_file", `${path}/tmp.key`];
+      } else {
+        enc = ["-hls_enc", "1", "-hls_enc_key", iv];
+      }
+    }
+
     let array: string[] = [
       `-hide_banner`,
       `-y`,
       `-i`,
       `"${args.video}"`,
-      `-muxdelay`,
-      `0`,
       `-c:a`,
       `aac`,
+      `-b:a`,
+      `90k`,
       `-vn`,
       `-hls_time`,
       `${args.hlsTime}`,
@@ -212,6 +215,7 @@ const convert_audio = async (
       `1`,
       `-hls_list_size`,
       `0`,
+      ...enc,
       `-keyint_min`,
       `25`,
       `-progress`,
@@ -263,7 +267,7 @@ const convert_audio = async (
     });
   } else {
     for (let i = 0; i < args.audios.length; i++) {
-      await convert_multiple_audio(args, path, current_path, i, callback);
+      await convert_multiple_audio(args, path, current_path, i, iv, callback);
     }
     callback("finished", {
       code: 1,
@@ -277,6 +281,7 @@ const convert_multiple_audio = (
   path: string,
   current_path: string,
   index: number,
+  iv: string,
   callback: (stat: string, data: any) => void
 ): Promise<number> => {
   return new Promise((resolve) => {
@@ -286,15 +291,28 @@ const convert_multiple_audio = (
       });
     }
 
+    let enc: string[] = [];
+    if (args.encryption) {
+      if (args.sign.length > 0 && args.signUrl.length > 0) {
+        fs.writeFileSync(
+          `${path}/tmp.key`,
+          `${args.signUrl}\n${args.sign}\n${iv}`,
+          "utf-8"
+        );
+        enc = ["-hls_key_info_file", `${path}/tmp.key`];
+      } else {
+        enc = ["-hls_enc", "1", "-hls_enc_key", iv];
+      }
+    }
     let array: string[] = [
       `-hide_banner`,
       `-y`,
       `-i`,
       `"${args.audios[index].path}"`,
-      `-muxdelay`,
-      `0`,
       `-c:a`,
       `aac`,
+      `-b:a`,
+      `90k`,
       `-vn`,
       `-hls_time`,
       `${args.hlsTime}`,
@@ -302,8 +320,11 @@ const convert_multiple_audio = (
       `1`,
       `-hls_list_size`,
       `0`,
+      ...enc,
       `-keyint_min`,
       `25`,
+      `-async`,
+      `1`,
       `-progress`,
       `pipe:1`,
       `-g`,
